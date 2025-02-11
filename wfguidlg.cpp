@@ -5,15 +5,11 @@
 #include "wfgui.h"
 #include "wfguiDlg.h"
 
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <math.h>
 
-
-//#include "Fourier.h"
-
-
+// #include "Fourier.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -24,15 +20,15 @@ static char THIS_FILE[] = __FILE__;
 #define USE_MESSAGE 1
 #define WM_MYMESSAGE (WM_USER + 100)
 
-FILE* fp_wav;
-FILE* fp_log;
-BYTE* filebuffer;
+FILE *fp_wav;
+FILE *fp_log;
+BYTE *filebuffer;
 CString messagebuff;
 int loaded_bytes, offset, ticks;
 double d_in_val, d_out_val;
 int fft_samples;
 
-#define FFT_LEN 4096*2
+#define FFT_LEN 4096 * 2
 double finleft[FFT_LEN / 2], fout[FFT_LEN], foutimg[FFT_LEN], fdraw[FFT_LEN / 2];
 double scope_val;
 double peak, max_peak;
@@ -45,7 +41,8 @@ double max_peak_10sec[100];
 int index_100, index_max_RMS;
 
 int process_sample(void);
-extern "C" {
+extern "C"
+{
 	double process_2nd_order(register double val);
 	double process_flutter(register double val);
 	double process_wow(register double val);
@@ -53,9 +50,7 @@ extern "C" {
 	double process_DIN(register double val);
 }
 
-
 void CALLBACK waveInProc(HWAVEIN hwi, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
-
 
 short int waveIn[MAX_BUFFERS][44100]; // 1 sec of input data
 int running;
@@ -70,17 +65,20 @@ public:
 	CAboutDlg();
 
 	// Dialog Data
-		//{{AFX_DATA(CAboutDlg)
-	enum { IDD = IDD_ABOUTBOX };
+	//{{AFX_DATA(CAboutDlg)
+	enum
+	{
+		IDD = IDD_ABOUTBOX
+	};
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAboutDlg)
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
+	virtual void DoDataExchange(CDataExchange *pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 protected:
 	//{{AFX_MSG(CAboutDlg)
 	//}}AFX_MSG
@@ -93,7 +91,7 @@ CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 	//}}AFX_DATA_INIT
 }
 
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+void CAboutDlg::DoDataExchange(CDataExchange *pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CAboutDlg)
@@ -101,32 +99,29 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
-	//{{AFX_MSG_MAP(CAboutDlg)
-	//}}AFX_MSG_MAP
+//{{AFX_MSG_MAP(CAboutDlg)
+//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CWfguiDlg dialog
 
-CWfguiDlg::CWfguiDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CWfguiDlg::IDD, pParent)
-	, m_radio3(false)
-	, m_max_10_sec(_T(""))
-	, m_log(false)
+CWfguiDlg::CWfguiDlg(CWnd *pParent /*=NULL*/)
+	: CDialog(CWfguiDlg::IDD, pParent), m_radio3(false), m_max_10_sec(_T("")), m_log(false)
 {
 	//{{AFX_DATA_INIT(CWfguiDlg)
 	m_status = _T("");
 	m_freq = _T("");
 	m_rms = _T("");
 	m_filter_type = _T("");
-	//m_peak = _T("");
+	// m_peak = _T("");
 	m_savefile = FALSE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON1);
 }
 
-void CWfguiDlg::DoDataExchange(CDataExchange* pDX)
+void CWfguiDlg::DoDataExchange(CDataExchange *pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CWfguiDlg)
@@ -141,7 +136,7 @@ void CWfguiDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_RMS, m_rms);
 	DDX_Text(pDX, IDC_MAX, m_max_10_sec);
 	DDX_CBString(pDX, IDC_FILTER_TYPE, m_filter_type);
-	//DDX_Text(pDX, IDC_PEAK, m_peak);
+	// DDX_Text(pDX, IDC_PEAK, m_peak);
 	DDX_Check(pDX, IDC_FILTER, m_savefile);
 	DDX_Control(pDX, IDC_NEEDLE, m_3DMeterCtrl);
 	//}}AFX_DATA_MAP
@@ -153,21 +148,21 @@ void CWfguiDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 BEGIN_MESSAGE_MAP(CWfguiDlg, CDialog)
-	//{{AFX_MSG_MAP(CWfguiDlg)
-	ON_WM_SYSCOMMAND()
-	ON_WM_PAINT()
-	ON_WM_QUERYDRAGICON()
-	ON_WM_TIMER()
-	ON_BN_CLICKED(IDC_RADIO1, OnRadio1)
-	ON_BN_CLICKED(IDC_RADIO2, OnRadio2)
-	ON_BN_CLICKED(IDC_RADIO3, OnRadio3)
-	ON_BN_CLICKED(IDC_BUTTON1, OnButton1)
-	ON_BN_CLICKED(IDC_BUTTON2, OnButton2)
-	ON_MESSAGE(MM_WIM_DATA, OnWaveMessage)
-	ON_MESSAGE(WM_MYMESSAGE, OnMyMessage)
-	//}}AFX_MSG_MAP
-	ON_BN_CLICKED(IDC_RADIO4, OnBnClickedRadio4)
-	ON_BN_CLICKED(IDC_RADIO5, OnBnClickedRadio5)
+//{{AFX_MSG_MAP(CWfguiDlg)
+ON_WM_SYSCOMMAND()
+ON_WM_PAINT()
+ON_WM_QUERYDRAGICON()
+ON_WM_TIMER()
+ON_BN_CLICKED(IDC_RADIO1, OnRadio1)
+ON_BN_CLICKED(IDC_RADIO2, OnRadio2)
+ON_BN_CLICKED(IDC_RADIO3, OnRadio3)
+ON_BN_CLICKED(IDC_BUTTON1, OnButton1)
+ON_BN_CLICKED(IDC_BUTTON2, OnButton2)
+ON_MESSAGE(MM_WIM_DATA, OnWaveMessage)
+ON_MESSAGE(WM_MYMESSAGE, OnMyMessage)
+//}}AFX_MSG_MAP
+ON_BN_CLICKED(IDC_RADIO4, OnBnClickedRadio4)
+ON_BN_CLICKED(IDC_RADIO5, OnBnClickedRadio5)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -183,7 +178,7 @@ BOOL CWfguiDlg::OnInitDialog()
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
-	CMenu* pSysMenu = GetSystemMenu(FALSE);
+	CMenu *pSysMenu = GetSystemMenu(FALSE);
 	if (pSysMenu != NULL)
 	{
 		CString strAboutMenu;
@@ -194,21 +189,20 @@ BOOL CWfguiDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}
-	CFont* myFont = new CFont();
+	CFont *myFont = new CFont();
 	myFont->CreateFont(24, 0, 0, 0, FW_HEAVY, false, false,
-		0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-		FIXED_PITCH | FF_MODERN, _T("Courier New"));
-
+					   0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+					   FIXED_PITCH | FF_MODERN, _T("Courier New"));
 
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
-	SetIcon(m_hIcon, TRUE);			// Set big icon
-	SetIcon(m_hIcon, FALSE);		// Set small icon
+	SetIcon(m_hIcon, TRUE);	 // Set big icon
+	SetIcon(m_hIcon, FALSE); // Set small icon
 
 	// TODO: Add extra initialization here
 	m_freq_display.SetFont(myFont);
 	m_RMS_box.SetFont(myFont);
-	//IDC_FREQ
+	// IDC_FREQ
 	CheckRadioButton(IDC_RADIO5, IDC_RADIO6, IDC_RADIO6);
 	m_OK_LED.SetImage(IDB_BITMAP1 /* IDB_LEDBUTTON_GREEN*/, 15);
 
@@ -220,9 +214,6 @@ BOOL CWfguiDlg::OnInitDialog()
 		AfxMessageBox(L"NO Input Devices Found..", MB_ICONERROR);
 		CDialog::OnOK();
 	}
-
-
-
 
 	CRect rect;
 	GetDlgItem(IDC_OSCOPE)->GetWindowRect(rect);
@@ -260,15 +251,13 @@ BOOL CWfguiDlg::OnInitDialog()
 	m_filter_combo.AddString(L"Wow");
 	m_filter_combo.AddString(L"Flutter");
 	m_filter_combo.SetCurSel(1);
-	//m_filter_combo.SelectString(-1,"DIN");
-	//m_filter_type = "DIN";
+	// m_filter_combo.SelectString(-1,"DIN");
+	// m_filter_type = "DIN";
 	m_filter_combo.GetLBText(1, m_filter_type);
 
 	UpdateData(FALSE);
 
-
-
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	return TRUE; // return TRUE  unless you set the focus to a control
 }
 
 void CWfguiDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -320,10 +309,7 @@ HCURSOR CWfguiDlg::OnQueryDragIcon()
 	return (HCURSOR)m_hIcon;
 }
 
-
-
 short error_3150;
-
 
 double freq, err1, err2;
 double nanosec_per_sample;
@@ -338,12 +324,11 @@ double summ, average;
 int max, min, started;
 
 short sample;
-FILE* outf;
-//FILE *logfile;
+FILE *outf;
+// FILE *logfile;
 
 double RMS_sums[10];
 int current_buffer; // 0 to 9
-
 
 LRESULT CWfguiDlg::OnMyMessage(WPARAM wParam, LPARAM lParam)
 {
@@ -355,13 +340,10 @@ LRESULT CWfguiDlg::OnMyMessage(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-
-
-
-
 double proper_interval = 0.5 * 10e8 / 3150; // half a period of 3150 sampled
 
-int process_sample(void) {
+int process_sample(void)
+{
 
 	last_val = this_val;
 
@@ -374,7 +356,6 @@ int scope_samples;
 int quasi_peak_val;
 int ticks2;
 
-
 void CWfguiDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	int i, j;
@@ -382,26 +363,25 @@ void CWfguiDlg::OnTimer(UINT_PTR nIDEvent)
 	int zero_cross;
 	double err, filtered, v;
 
-
-
-	if (nIDEvent == 2) {
+	if (nIDEvent == 2)
+	{
 		ticks2++;
-		if (quasi_peak_val == 1000) {
+		if (quasi_peak_val == 1000)
+		{
 			printf("%d\n", quasi_peak_val);
 			return;
 		}
 		quasi_peak_val += 1;
-		if ((ticks2 % 20) == 0) {
+		if ((ticks2 % 20) == 0)
+		{
 			printf("%d\n", quasi_peak_val);
-			//m_metercontrol.SetPos(quasi_peak_val);
+			// m_metercontrol.SetPos(quasi_peak_val);
 		}
 		return;
-
 	}
 
-
-
-	if (ticks == 0) {
+	if (ticks == 0)
+	{
 		sum_of_squares = 0;
 		sum_of_squares1 = 0;
 		good_samples = 0;
@@ -420,8 +400,7 @@ void CWfguiDlg::OnRadio1()
 	m_OScopeCtrl.SetRange(-0.1, 0.1, 2);
 	m_3DMeterCtrl.SetRange(0.0, 0.1);
 	m_3DMeterCtrl.SetScaleDecimals(1);
-	//m_metercontrol.SetRange(0,1000);
-
+	// m_metercontrol.SetRange(0,1000);
 }
 
 void CWfguiDlg::OnRadio2()
@@ -431,7 +410,7 @@ void CWfguiDlg::OnRadio2()
 	m_radio30.SetCheck(0);
 
 	m_OScopeCtrl.SetRange(-0.4, 0.4, 2);
-	//m_metercontrol.SetRange(0,5000);
+	// m_metercontrol.SetRange(0,5000);
 	m_3DMeterCtrl.SetRange(0.0, 0.4);
 	m_3DMeterCtrl.SetScaleDecimals(1);
 }
@@ -443,7 +422,7 @@ void CWfguiDlg::OnRadio3()
 	m_radio30.SetCheck(0);
 
 	m_OScopeCtrl.SetRange(-1.0, 1.0, 2);
-	//m_metercontrol.SetRange(0,10000);
+	// m_metercontrol.SetRange(0,10000);
 	m_3DMeterCtrl.SetRange(0.0, 1.0);
 	m_3DMeterCtrl.SetScaleDecimals(1);
 }
@@ -459,37 +438,32 @@ void CWfguiDlg::OnBnClickedRadio4()
 	m_3DMeterCtrl.SetScaleDecimals(0);
 }
 
-
-
-
-
-void CWfguiDlg::OnButton1() //STOP
+void CWfguiDlg::OnButton1() // STOP
 {
 	running = 0;
 	GetDlgItem(IDC_BUTTON1)->EnableWindow(FALSE);
 	Sleep(200);
 
 	GetDlgItem(IDC_BUTTON2)->EnableWindow(TRUE);
-	if (outf != NULL) {
+	if (outf != NULL)
+	{
 		fclose(outf);
 		outf = NULL;
 	}
 
-	if (fp_log != NULL) {
+	if (fp_log != NULL)
+	{
 		fclose(fp_log);
 		fp_log = NULL;
 	}
 
-
-
 	// TODO: Add your control notification handler code here
-//	waveInStop(m_hWaveIn);
-//	waveInClose(m_hWaveIn);
-//	KillTimer(1);
+	//	waveInStop(m_hWaveIn);
+	//	waveInClose(m_hWaveIn);
+	//	KillTimer(1);
 
-	//UnPrepareBuffers();
-	//waveInClose(m_hWaveIn);
-
+	// UnPrepareBuffers();
+	// waveInClose(m_hWaveIn);
 }
 
 void CWfguiDlg::OnButton2() // START
@@ -504,7 +478,7 @@ void CWfguiDlg::OnButton2() // START
 	UpdateData(TRUE);
 
 	//	if(fp_wav)
-		//SetTimer(1,50,NULL);
+	// SetTimer(1,50,NULL);
 	running = 1;
 	first_buffer = 1;
 	current_buffer = 0;
@@ -512,7 +486,8 @@ void CWfguiDlg::OnButton2() // START
 	summ = 0.0;
 	average = 0.0;
 	ticks = 0;
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 100; i++)
+	{
 		max_RMS[i] = 0.0;
 		max_peak_10sec[i] = 0.0;
 	}
@@ -525,12 +500,13 @@ void CWfguiDlg::OnButton2() // START
 	max_peak = 0.0;
 	nanosec_per_sample = 10e8 / 44100;
 
-
-	if (m_savefile) {
+	if (m_savefile)
+	{
 		fopen_s(&outf, "WF_out.dat", "wb");
 	}
 
-	if (m_log) {
+	if (m_log)
+	{
 		fopen_s(&fp_log, "log.txt", "w");
 	}
 
@@ -541,9 +517,9 @@ void CWfguiDlg::OnButton2() // START
 
 int CWfguiDlg::FillDevices(void)
 {
-	CComboBox* pBox = (CComboBox*)GetDlgItem(IDC_DEVICES);
+	CComboBox *pBox = (CComboBox *)GetDlgItem(IDC_DEVICES);
 	UINT nDevices, nC1;
-	WAVEINCAPS stWIC = { 0 };
+	WAVEINCAPS stWIC = {0};
 	MMRESULT mRes;
 
 	pBox->ResetContent();
@@ -569,8 +545,8 @@ int CWfguiDlg::FillDevices(void)
 void CWfguiDlg::OnCbnSelchangeDevices()
 {
 
-	CComboBox* pDevices = (CComboBox*)GetDlgItem(IDC_DEVICES);
-	WAVEINCAPS stWIC = { 0 };
+	CComboBox *pDevices = (CComboBox *)GetDlgItem(IDC_DEVICES);
+	WAVEINCAPS stWIC = {0};
 	MMRESULT mRes;
 	int nSel, res;
 
@@ -583,12 +559,11 @@ void CWfguiDlg::OnCbnSelchangeDevices()
 		if (res == 0)
 			AfxMessageBox(L"Format not supported by device");
 	}
-
 }
 
 void CALLBACK waveInProc(HWAVEIN hwi, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)
 {
-	WAVEHDR* pHdr = NULL;
+	WAVEHDR *pHdr = NULL;
 	switch (uMsg)
 	{
 	case WIM_CLOSE:
@@ -596,8 +571,8 @@ void CALLBACK waveInProc(HWAVEIN hwi, UINT uMsg, DWORD dwInstance, DWORD dwParam
 
 	case WIM_DATA:
 	{
-		CWfguiDlg* pDlg = (CWfguiDlg*)dwInstance;
-		pDlg->ProcessHeader((WAVEHDR*)dwParam1);
+		CWfguiDlg *pDlg = (CWfguiDlg *)dwInstance;
+		pDlg->ProcessHeader((WAVEHDR *)dwParam1);
 	}
 	break;
 
@@ -614,8 +589,7 @@ void CWfguiDlg::OpenDevice()
 	int nT1 = 0;
 	CString csT1;
 	MMRESULT mRes = 0;
-	CComboBox* pDevices = (CComboBox*)GetDlgItem(IDC_DEVICES);
-
+	CComboBox *pDevices = (CComboBox *)GetDlgItem(IDC_DEVICES);
 
 	m_stWFEX.nSamplesPerSec = 44100;
 	m_stWFEX.wBitsPerSample = 16;
@@ -625,16 +599,15 @@ void CWfguiDlg::OpenDevice()
 	m_stWFEX.nAvgBytesPerSec = m_stWFEX.nSamplesPerSec * m_stWFEX.nBlockAlign;
 	m_stWFEX.cbSize = sizeof(WAVEFORMATEX);
 
-
 	mRes = waveInOpen(&m_hWaveIn,
-		pDevices->GetCurSel(),
-		&m_stWFEX,
-		/*(DWORD_PTR)*/
+					  pDevices->GetCurSel(),
+					  &m_stWFEX,
+	/*(DWORD_PTR)*/
 #if USE_MESSAGE
-		reinterpret_cast<LONG>(m_hWnd), NULL, CALLBACK_WINDOW
+					  reinterpret_cast<LONG>(m_hWnd), NULL, CALLBACK_WINDOW
 #else
-		(DWORD)waveInProc, (DWORD)this, CALLBACK_FUNCTION
-#endif		 
+					  (DWORD)waveInProc, (DWORD)this, CALLBACK_FUNCTION
+#endif
 	);
 	if (mRes != MMSYSERR_NOERROR)
 	{
@@ -646,8 +619,8 @@ void CWfguiDlg::OpenDevice()
 CString CWfguiDlg::StoreError(MMRESULT mRes, BOOL bDisplay, LPCTSTR lpszFormat, ...)
 {
 	MMRESULT mRes1 = 0;
-	WCHAR szErrorText[1024] = { 0 };
-	WCHAR szT1[2 * MAX_PATH] = { 0 };
+	WCHAR szErrorText[1024] = {0};
+	WCHAR szT1[2 * MAX_PATH] = {0};
 
 	va_list args;
 	va_start(args, lpszFormat);
@@ -667,7 +640,7 @@ CString CWfguiDlg::StoreError(MMRESULT mRes, BOOL bDisplay, LPCTSTR lpszFormat, 
 	return m_csErrorText;
 }
 
-void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
+void CWfguiDlg::ProcessHeader(WAVEHDR *pHdr)
 {
 	MMRESULT mRes = 0;
 	int i, max_val;
@@ -689,22 +662,23 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 	min_crossings = center_freq / 5 * 0.95;
 	max_crossings = center_freq / 5 * 1.05;
 
-	if (running == 0) {
+	if (running == 0)
+	{
 		waveInStop(m_hWaveIn);
-		//UnPrepareBuffers();
+		// UnPrepareBuffers();
 		waveInClose(m_hWaveIn);
 		m_OK_LED.Depress(false);
 		return;
 	}
 
-
-	//TRACE("%d",pHdr->dwUser);
+	// TRACE("%d",pHdr->dwUser);
 	if (WHDR_DONE == (WHDR_DONE & pHdr->dwFlags))
 	{
 		max_val = 0;
 		zero_cross = 0;
-		for (i = 0; i < 4410; i++) {
-			sample = *(short*)(pHdr->lpData + i * 2);
+		for (i = 0; i < 4410; i++)
+		{
+			sample = *(short *)(pHdr->lpData + i * 2);
 			if (sample > max_val)
 				max_val = sample;
 
@@ -713,7 +687,8 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 			prev_sample = sample;
 		}
 
-		if (max_val < 50) {
+		if (max_val < 50)
+		{
 			m_status = "Signal too low";
 			UpdateData(false);
 			mRes = waveInAddBuffer(m_hWaveIn, pHdr, sizeof(WAVEHDR));
@@ -721,9 +696,10 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 			return;
 		}
 
-		if ((zero_cross < min_crossings) || (zero_cross > max_crossings)) {
+		if ((zero_cross < min_crossings) || (zero_cross > max_crossings))
+		{
 			mRes = waveInAddBuffer(m_hWaveIn, pHdr, sizeof(WAVEHDR));
-			//m_status.Format("%d Hz", zero_cross * 5);
+			// m_status.Format("%d Hz", zero_cross * 5);
 			m_freq.Format(L"%d Hz", zero_cross * 5);
 			UpdateData(false);
 			m_OK_LED.Depress(false);
@@ -733,8 +709,9 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 
 		m_OK_LED.Depress(true);
 
-		for (i = 0; i < 4410; i++) {
-			sample = *(short*)(pHdr->lpData + i * 2);
+		for (i = 0; i < 4410; i++)
+		{
+			sample = *(short *)(pHdr->lpData + i * 2);
 
 			d_in_val = double(sample);
 			d_out_val = process_2nd_order(d_in_val);
@@ -742,71 +719,74 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 			//		this_val = sample;
 			zero_cross = 0;
 
-
-			if (((this_val > 0) && (last_val < 0)) || ((this_val < 0) && (last_val > 0))) { // sign changed
+			if (((this_val > 0) && (last_val < 0)) || ((this_val < 0) && (last_val > 0)))
+			{ // sign changed
 				delta = -last_val * nanosec_per_sample / (this_val - last_val);
 				interval += delta;
 				_remainder = nanosec_per_sample - delta;
 				zero_cross = 1;
 			}
-			else {
+			else
+			{
 				interval += nanosec_per_sample; // nS between samples
 			}
 
-			if (this_val == 0) {
+			if (this_val == 0)
+			{
 				_remainder = 0;
 				zero_cross = 1;
 			}
 
 			last_val = this_val;
 
-			if (zero_cross) {
+			if (zero_cross)
+			{
 				error_3150 = (short)(10 * (proper_interval - interval));
 				// for 1% will be 315
 
-
-				if (first_buffer) {
+				if (first_buffer)
+				{
 					good_samples = 0;
 					first_buffer = 0;
 					continue;
 				}
 
-
-				if (m_savefile) {
-					if (outf != NULL) {
+				if (m_savefile)
+				{
+					if (outf != NULL)
+					{
 						fwrite(&error_3150, 2, 1, outf);
 					}
 				}
 
-
 				err = (proper_interval - interval) / proper_interval; // in %
-
 
 				if (m_filter_type == "DIN")
 					err = process_DIN(err);
-				else {
-					if (m_filter_type == "Wow") {
+				else
+				{
+					if (m_filter_type == "Wow")
+					{
 						err = process_wow(err);
 					}
+					else if (m_filter_type == "Flutter")
+					{
+						err = process_flutter(err);
+					}
 					else
-						if (m_filter_type == "Flutter") {
-							err = process_flutter(err);
-						}
-						else
-							err = process_unweighted(err);
+						err = process_unweighted(err);
 				}
-
-
 
 				scope_val += err * 100;
 
 #if 1
-				if (++scope_samples == 7) {
+				if (++scope_samples == 7)
+				{
 					m_OScopeCtrl.AppendPoint(scope_val / 7);
 					scope_val = 0;
 					scope_samples = 0;
 				}
-#endif	
+#endif
 
 				//	if(err > 0.03)
 				//		continue;
@@ -839,7 +819,7 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 					//						m_metercontrol.SetPos((int)(peak * 10000));
 					m_peak.Format("%.4f", max_peak);
 
-					//UpdateData (FALSE);	
+					//UpdateData (FALSE);
 				}
 #endif
 
@@ -848,21 +828,18 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 				good_samples++;
 
 				summ += (double)interval;
-				//ints[j++] = interval;
+				// ints[j++] = interval;
 				interval = _remainder;
 				samples++;
 
-
-				average = summ / (double)good_samples;// samples;
+				average = summ / (double)good_samples; // samples;
 				freq = 1000000000 / average / 2;
 
-				//UpdateData (FALSE);	
-
+				// UpdateData (FALSE);
 
 			} // if zerocross
 
 		} // for i
-
 
 		m_3DMeterCtrl.UpdateNeedle(max_peak);
 #if OLD_DYNAMICS
@@ -875,25 +852,24 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 			ticks = 0;
 		}
 #endif
-		//	UpdateData (FALSE);	
+		//	UpdateData (FALSE);
 
 		RMS_sums[current_buffer] = sum_of_squares;
 
-
 		max_peak_10sec[index_100] = max_peak;
-
 
 		if (++index_100 == 100)
 			index_100 = 0;
 
-
-		if (++current_buffer == 10) {
+		if (++current_buffer == 10)
+		{
 			int i;
 			double max_peak_10 = 0.0;
 			double max_RMS_10 = 0.0;
 
 			sum_of_squares1 = 0.0;
-			for (i = 0; i < 10; i++) {
+			for (i = 0; i < 10; i++)
+			{
 				sum_of_squares1 += RMS_sums[i];
 			}
 			max_RMS[index_100] = sqrt(sum_of_squares1 / good_samples) * 100;
@@ -901,8 +877,8 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 
 			// now the moving max in 10 sec
 
-
-			for (i = 0; i < 100; i++) {
+			for (i = 0; i < 100; i++)
+			{
 				if (max_RMS[i] > max_RMS_10)
 					max_RMS_10 = max_RMS[i];
 				if (max_peak_10sec[i] > max_peak_10)
@@ -910,15 +886,14 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 			}
 			m_max_10_sec.Format(L"Max in 10 sec %.4f RMS %.4f quasi-peak", max_RMS_10, max_peak_10);
 
-
 			good_samples = 0;
 			current_buffer = 0;
 			summ = 0.0;
 			samples = 0;
 			m_freq.Format(L"%.1f", freq);
 
-
-			if (m_log && (fp_log != NULL)) {
+			if (m_log && (fp_log != NULL))
+			{
 				fprintf(fp_log, "%.1f %.4f %.4f\n", freq, max_RMS[index_100], max_peak_10);
 			}
 		}
@@ -927,12 +902,10 @@ void CWfguiDlg::ProcessHeader(WAVEHDR* pHdr)
 
 		AfxGetMainWnd()->SendMessage(WM_MYMESSAGE);
 
-
 		//		mmioWrite(m_hOPFile,pHdr->lpData,pHdr->dwBytesRecorded);
 		mRes = waveInAddBuffer(m_hWaveIn, pHdr, sizeof(WAVEHDR));
 		if (mRes != 0)
 			StoreError(mRes, TRUE, L"File: %s ,Line Number:%d", __FILE__, __LINE__);
-
 	}
 }
 
@@ -964,12 +937,11 @@ void CWfguiDlg::PrepareBuffers()
 			throw m_csErrorText;
 		}
 	}
-
 }
 
 afx_msg LRESULT CWfguiDlg::OnWaveMessage(WPARAM wParam, LPARAM lParam)
 {
-	ProcessHeader(reinterpret_cast<WAVEHDR*>(lParam));
+	ProcessHeader(reinterpret_cast<WAVEHDR *>(lParam));
 	return 0;
 }
 
@@ -992,7 +964,6 @@ void CWfguiDlg::UnPrepareBuffers(void)
 		}
 	}
 }
-
 
 void CWfguiDlg::OnBnClickedRadio5()
 {

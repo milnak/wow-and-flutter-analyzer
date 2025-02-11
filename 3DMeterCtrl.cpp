@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "math.h"
-//#include "MeterTestForm.h"
+// #include "MeterTestForm.h"
 #include "3DMeterCtrl.h"
 #include "MemDC.h"
 #ifdef _DEBUG
@@ -27,7 +27,6 @@ C3DMeterCtrl::C3DMeterCtrl()
 	m_strUnits.Format(L"Peak");
 
 	m_colorNeedle = RGB(200, 0, 0);
-
 }
 
 C3DMeterCtrl::~C3DMeterCtrl()
@@ -38,12 +37,11 @@ C3DMeterCtrl::~C3DMeterCtrl()
 		m_dcBackground.SelectObject(m_pBitmapOldBackground);
 }
 
-
 BEGIN_MESSAGE_MAP(C3DMeterCtrl, CStatic)
-	//{{AFX_MSG_MAP(C3DMeterCtrl)
-	ON_WM_PAINT()
-	ON_WM_SIZE()
-	//}}AFX_MSG_MAP
+//{{AFX_MSG_MAP(C3DMeterCtrl)
+ON_WM_PAINT()
+ON_WM_SIZE()
+//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -59,39 +57,37 @@ void C3DMeterCtrl::OnPaint()
 	// make a memory dc
 	CMemDC memDC(&dc, &m_rectCtrl);
 
-	// set up a memory dc for the background stuff 
+	// set up a memory dc for the background stuff
 	// if one isn't being used
 	if ((m_dcBackground.GetSafeHdc() == NULL) || (m_bitmapBackground.m_hObject == NULL))
 	{
 		m_dcBackground.CreateCompatibleDC(&dc);
 		m_bitmapBackground.CreateCompatibleBitmap(&dc, m_rectCtrl.Width(),
-			m_rectCtrl.Height());
+												  m_rectCtrl.Height());
 		m_pBitmapOldBackground = m_dcBackground.SelectObject(&m_bitmapBackground);
 
 		// Fill this bitmap with the background.
 
-		// Note: This requires some serious drawing and calculating, 
-		// therefore it is drawn "once" to a bitmap and 
+		// Note: This requires some serious drawing and calculating,
+		// therefore it is drawn "once" to a bitmap and
 		// the bitmap is stored and blt'd when needed.
 		DrawMeterBackground(&m_dcBackground, m_rectCtrl);
-
 	}
 
 	// drop in the background
 	memDC.BitBlt(0, 0, m_rectCtrl.Width(), m_rectCtrl.Height(),
-		&m_dcBackground, 0, 0, SRCCOPY);
+				 &m_dcBackground, 0, 0, SRCCOPY);
 
 	// add the needle to the background
 	DrawNeedle(&memDC);
 
 	// add the value to the background
 	DrawValue(&memDC);
-
 }
 
-void C3DMeterCtrl::DrawValue(CDC* pDC)
+void C3DMeterCtrl::DrawValue(CDC *pDC)
 {
-	CFont* pFontOld;
+	CFont *pFontOld;
 	CString strTemp;
 
 	// Pick up the font.
@@ -111,35 +107,33 @@ void C3DMeterCtrl::DrawValue(CDC* pDC)
 	// restore the color and the font
 	pDC->SetBkColor(m_colorWindow);
 	pDC->SelectObject(pFontOld);
-
 }
 
 void C3DMeterCtrl::UpdateNeedle(double dValue)
 {
 	m_dCurrentValue = dValue;
 	Invalidate();
-
 }
 
-void C3DMeterCtrl::DrawNeedle(CDC* pDC)
+void C3DMeterCtrl::DrawNeedle(CDC *pDC)
 {
 	int nResult;
 
 	double dAngleRad;
 	double dTemp;
-	CBrush brushFill, * pBrushOld;
-	CPen penDraw, * pPenOld;
+	CBrush brushFill, *pBrushOld;
+	CPen penDraw, *pPenOld;
 	CPoint pointNeedle[3];
 
 	// This function draws a triangular needle.
 	// The base of the needle is a horizontal line
 	// that runs through the center point of the arcs
 	// that make up the face of the meter.
-	// The tip of the needle is at an angle that is 
+	// The tip of the needle is at an angle that is
 	// calculated based on the current value and the scale.
 
 	// The needle is constructed as a 3-point polygon
-	// (i.e. triangle).  The triangle is drawn to the 
+	// (i.e. triangle).  The triangle is drawn to the
 	// screen based on a clipping region that is derived
 	// from the meter face.  See "DrawMeterBackground".
 
@@ -151,7 +145,8 @@ void C3DMeterCtrl::DrawNeedle(CDC* pDC)
 
 	// calculate the angle for the tip of the needle
 	dAngleRad = (m_dCurrentValue - m_dMinValue) * (m_dRightAngleRad - m_dLeftAngleRad) /
-		(m_dMaxValue - m_dMinValue) + m_dLeftAngleRad;
+					(m_dMaxValue - m_dMinValue) +
+				m_dLeftAngleRad;
 
 	// if the angle is beyond the meter, draw the needle
 	// at the limit (as if it is "pegged")
@@ -186,11 +181,9 @@ void C3DMeterCtrl::DrawNeedle(CDC* pDC)
 	// restore the pen and brush
 	pDC->SelectObject(pPenOld);
 	pDC->SelectObject(pBrushOld);
-
-
 }
 
-void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
+void C3DMeterCtrl::DrawMeterBackground(CDC *pDC, CRect &rect)
 {
 	int i, nAngleDeg, nRef;
 	int nHeight;
@@ -206,11 +199,11 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 
 	CPoint pointRecess[BOUNDARY_POINTS];
 
-	CBrush brushFill, * pBrushOld;
+	CBrush brushFill, *pBrushOld;
 
-	CFont* pFontOld;
+	CFont *pFontOld;
 
-	CPen penDraw, * pPenOld;
+	CPen penDraw, *pPenOld;
 
 	TEXTMETRIC tm;
 
@@ -237,11 +230,10 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 	// this is the density of points along the arcs
 	nAngleIncrementDeg = 5;
 
-	// convert these to radians 
+	// convert these to radians
 	// for computer (rather than human) use!
 	m_dLeftAngleRad = nEndAngleDeg * dRadPerDeg;
 	m_dRightAngleRad = nStartAngleDeg * dRadPerDeg;
-
 
 	// construct the meter face region
 	// This is a polygon starting at the top right of
@@ -265,10 +257,9 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 	// at this point we have constructed the entire
 	// top arc of the meter face
 
-	nHalfPoints = nRef;   // hold onto this for later use
+	nHalfPoints = nRef; // hold onto this for later use
 
-
-	// now add points to the polygon starting at the 
+	// now add points to the polygon starting at the
 	// left side of the lower arc.
 	for (nAngleDeg = nEndAngleDeg; nAngleDeg >= nStartAngleDeg; nAngleDeg -= nAngleIncrementDeg)
 	{
@@ -280,8 +271,7 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 		nRef++;
 	}
 
-
-	// Now construct a polygon that is just outside 
+	// Now construct a polygon that is just outside
 	// the meter face to use in drawing a "recess"
 	// around the meter face.
 	for (i = 0; i < nRef; i++)
@@ -311,7 +301,7 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 	m_rectValue.top = rect.bottom - (rect.bottom - pointRecess[nRef - 1].y) * 60 / 100;
 
 	// get the relevant system colors
-	m_colorWindow = RGB(255, 255, 220);// GetSysColor(COLOR_WINDOW) ;
+	m_colorWindow = RGB(255, 255, 220); // GetSysColor(COLOR_WINDOW) ;
 	m_colorButton = GetSysColor(COLOR_BTNFACE);
 	m_colorShadow = GetSysColor(COLOR_BTNSHADOW);
 	m_colorHighlight = GetSysColor(COLOR_BTNHIGHLIGHT);
@@ -326,7 +316,7 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 
 	// Draw the meter recess.
 
-	// This happens by first drawing the 
+	// This happens by first drawing the
 	// top and left sides in the shadow color.
 	penDraw.DeleteObject();
 	penDraw.CreatePen(PS_SOLID, 1, m_colorShadow);
@@ -335,14 +325,14 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 	pDC->PolylineTo(pointRecess, nHalfPoints + 1);
 	pDC->SelectObject(pPenOld);
 
-	// and then drawing the 
+	// and then drawing the
 	// left and bottom sides in the shadow color.
 	penDraw.DeleteObject();
 	penDraw.CreatePen(PS_SOLID, 1, m_colorHighlight);
 	pPenOld = pDC->SelectObject(&penDraw);
 	// draw the bottom arc
 	pDC->PolylineTo(&pointRecess[nHalfPoints], nHalfPoints);
-	pDC->LineTo(pointRecess[0]);  // connect it to the top
+	pDC->LineTo(pointRecess[0]); // connect it to the top
 	pDC->SelectObject(pPenOld);
 
 	// Draw the meter face
@@ -402,7 +392,7 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 	// now we're done with the pen!
 	pDC->SelectObject(pPenOld);
 
-	// Draw the recessed rectangle 
+	// Draw the recessed rectangle
 	// for the numerical value.
 
 	// draw the left and top sides with the shadow
@@ -427,13 +417,13 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 
 	m_fontValue.DeleteObject();
 	m_fontValue.CreateFont(nHeight, 0, 0, 0, 400,
-		FALSE, FALSE, 0, ANSI_CHARSET,
-		OUT_DEFAULT_PRECIS,
-		CLIP_DEFAULT_PRECIS,
-		DEFAULT_QUALITY,
-		DEFAULT_PITCH | FF_SWISS, L"Arial");
+						   FALSE, FALSE, 0, ANSI_CHARSET,
+						   OUT_DEFAULT_PRECIS,
+						   CLIP_DEFAULT_PRECIS,
+						   DEFAULT_QUALITY,
+						   DEFAULT_PITCH | FF_SWISS, L"Arial");
 
-	// Now select this font and calculate the 
+	// Now select this font and calculate the
 	// actual height to see what Windows gave us.
 	pFontOld = pDC->SelectObject(&m_fontValue);
 	pDC->GetTextMetrics(&tm);
@@ -442,9 +432,9 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 	// determine the location for the value within
 	// the rectangele based on the font height
 	m_nValueBaseline = m_rectValue.bottom -
-		m_nValueFontHeight / 4;
+					   m_nValueFontHeight / 4;
 	m_nValueCenter = m_rectValue.left +
-		m_rectValue.Width() / 2;
+					 m_rectValue.Width() / 2;
 
 	// now we need to use the font to draw some text
 	// set the colors (based on system colors)
@@ -454,17 +444,15 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 	// draw the units below the meter face
 	pDC->SetTextAlign(TA_CENTER | TA_BASELINE);
 	pDC->TextOut(m_nValueCenter,
-		m_rectValue.top - m_nValueFontHeight / 4,
-		m_strUnits);
-
+				 m_rectValue.top - m_nValueFontHeight / 4,
+				 m_strUnits);
 
 	// draw the value on the minimum side of the meter
 	pDC->SetTextAlign(TA_LEFT | TA_BASELINE);
 	strTemp.Format(L"%.*lf", m_nScaleDecimals, m_dMinValue);
 	pDC->TextOut((rect.left + m_pointBoundary[nHalfPoints - 1].x) / 2,
-		m_pointBoundary[nHalfPoints / 2].y - m_nValueFontHeight * 25 / 100,
-		strTemp);
-
+				 m_pointBoundary[nHalfPoints / 2].y - m_nValueFontHeight * 25 / 100,
+				 strTemp);
 
 	// draw the center
 	pDC->SetTextAlign(TA_RIGHT | TA_BASELINE);
@@ -473,40 +461,32 @@ void C3DMeterCtrl::DrawMeterBackground(CDC* pDC, CRect& rect)
 	else
 		strTemp.Format(L"%.*lf", 2, m_dMaxValue / 2);
 
-
-
 	if (m_dMaxValue > 1)
 		pDC->TextOut((rect.right + 40) / 2 - 10,
-			m_pointBoundary[nHalfPoints / 2].y - m_nValueFontHeight * 25 / 100 - 20,
-			strTemp);
+					 m_pointBoundary[nHalfPoints / 2].y - m_nValueFontHeight * 25 / 100 - 20,
+					 strTemp);
 	else
 		pDC->TextOut((rect.right + 40) / 2,
-			m_pointBoundary[nHalfPoints / 2].y - m_nValueFontHeight * 25 / 100 - 20,
-			strTemp);
-
-
-
+					 m_pointBoundary[nHalfPoints / 2].y - m_nValueFontHeight * 25 / 100 - 20,
+					 strTemp);
 
 	// draw the value on the maximum side of the meter
 	pDC->SetTextAlign(TA_RIGHT | TA_BASELINE);
 	strTemp.Format(L"%.*lf", m_nScaleDecimals, m_dMaxValue);
 	pDC->TextOut((rect.right + m_pointBoundary[0].x) / 2,
-		m_pointBoundary[nHalfPoints / 2].y - m_nValueFontHeight * 25 / 100,
-		strTemp);
+				 m_pointBoundary[nHalfPoints / 2].y - m_nValueFontHeight * 25 / 100,
+				 strTemp);
 
 	// restore the font and background color
 	pDC->SelectObject(pFontOld);
 	pDC->SetBkColor(m_colorWindow);
-
 }
-
 
 void C3DMeterCtrl::OnSize(UINT nType, int cx, int cy)
 {
 	CStatic::OnSize(nType, cx, cy);
 
 	ReconstructControl();
-
 }
 
 void C3DMeterCtrl::ReconstructControl()
@@ -522,7 +502,6 @@ void C3DMeterCtrl::ReconstructControl()
 	}
 
 	Invalidate();
-
 }
 
 void C3DMeterCtrl::SetRange(double dMin, double dMax)
@@ -544,7 +523,7 @@ void C3DMeterCtrl::SetValueDecimals(int nDecimals)
 	ReconstructControl();
 }
 
-void C3DMeterCtrl::SetUnits(CString& strUnits)
+void C3DMeterCtrl::SetUnits(CString &strUnits)
 {
 	m_strUnits = strUnits;
 	ReconstructControl();

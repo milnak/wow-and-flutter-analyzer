@@ -27,7 +27,7 @@
 //	Construction :
 //	|
 //	|	CMemDC pDC (dc, &drawRect, toMemDC) ;
-//	|	
+//	|
 //	|	where:
 //	|		"dc"		- pointer to the CDC that is an argument to OnDraw
 //	|		"drawRect"	- pointer to the rectangle to draw in
@@ -37,19 +37,18 @@
 // This class implements a memory Device Context which allows
 // flicker free drawing.
 
-class CMemDC : public CDC 
+class CMemDC : public CDC
 {
-private:	
-	CBitmap		m_bitmap;		// Offscreen bitmap
-	CBitmap*	m_oldBitmap;	// bitmap originally found in CMemDC
-	CDC*		m_pDC;			// Saves CDC passed in constructor
-	CRect		m_rect;			// Rectangle of drawing area.
-	BOOL		m_bMemDC;		// TRUE if CDC really is a Memory DC.
+private:
+	CBitmap m_bitmap;	  // Offscreen bitmap
+	CBitmap *m_oldBitmap; // bitmap originally found in CMemDC
+	CDC *m_pDC;			  // Saves CDC passed in constructor
+	CRect m_rect;		  // Rectangle of drawing area.
+	BOOL m_bMemDC;		  // TRUE if CDC really is a Memory DC.
 public:
-	
-	CMemDC(CDC* pDC, const CRect* pRect = NULL, bool boolToMemory = TRUE) : CDC()
+	CMemDC(CDC *pDC, const CRect *pRect = NULL, bool boolToMemory = TRUE) : CDC()
 	{
-		ASSERT(pDC != NULL); 
+		ASSERT(pDC != NULL);
 
 		// Some initialization
 		m_pDC = pDC;
@@ -57,19 +56,19 @@ public:
 		if (boolToMemory)
 			m_bMemDC = !pDC->IsPrinting();
 		else
-			m_bMemDC = FALSE ;
+			m_bMemDC = FALSE;
 
 		// Get the rectangle to draw
-		if (pRect == NULL) 
+		if (pRect == NULL)
 		{
 			pDC->GetClipBox(&m_rect);
-		} 
-		else 
+		}
+		else
 		{
 			m_rect = *pRect;
 		}
-		
-		if (m_bMemDC) 
+
+		if (m_bMemDC)
 		{
 			// Create a Memory DC
 			CreateCompatibleDC(pDC);
@@ -77,53 +76,52 @@ public:
 
 			m_bitmap.CreateCompatibleBitmap(pDC, m_rect.Width(), m_rect.Height());
 			m_oldBitmap = SelectObject(&m_bitmap);
-			
+
 			SetMapMode(pDC->GetMapMode());
 			pDC->DPtoLP(&m_rect);
 			SetWindowOrg(m_rect.left, m_rect.top);
-		} 
-		else 
+		}
+		else
 		{
 			// Make a copy of the relevent parts of the current DC for printing
 			if (pDC->IsPrinting())
 				m_bPrinting = pDC->m_bPrinting;
-			m_hDC       = pDC->m_hDC;
+			m_hDC = pDC->m_hDC;
 			m_hAttribDC = pDC->m_hAttribDC;
 		}
 
-		// Fill background 
+		// Fill background
 		FillSolidRect(m_rect, pDC->GetBkColor());
 	}
 
-	
-	~CMemDC()	
-	{		
-		if (m_bMemDC) 
+	~CMemDC()
+	{
+		if (m_bMemDC)
 		{
 			// Copy the offscreen bitmap onto the screen.
 			m_pDC->BitBlt(m_rect.left, m_rect.top, m_rect.Width(), m_rect.Height(),
-				            this, m_rect.left, m_rect.top, SRCCOPY);			
-			
-			//Swap back the original bitmap.
+						  this, m_rect.left, m_rect.top, SRCCOPY);
+
+			// Swap back the original bitmap.
 			SelectObject(m_oldBitmap);
-		} 
-		else 
+		}
+		else
 		{
 			// All we need to do is replace the DC with an illegal value,
 			// this keeps us from accidently deleting the handles associated with
-			// the CDC that was passed to the constructor.			
+			// the CDC that was passed to the constructor.
 			m_hDC = m_hAttribDC = NULL;
-		}	
+		}
 	}
-	
-	// Allow usage as a pointer	
-	CMemDC* operator->() 
+
+	// Allow usage as a pointer
+	CMemDC *operator->()
 	{
 		return this;
-	}	
+	}
 
-	// Allow usage as a pointer	
-	operator CMemDC*() 
+	// Allow usage as a pointer
+	operator CMemDC *()
 	{
 		return this;
 	}

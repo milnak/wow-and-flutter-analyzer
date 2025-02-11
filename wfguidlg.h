@@ -10,7 +10,7 @@
 
 #pragma once
 #include <MMSystem.h>
-#define MAX_BUFFERS	2
+#define MAX_BUFFERS 2
 
 #include "OScopeCtrl.h"
 #include "SpectrumGraph.h"
@@ -18,14 +18,11 @@
 #include "LedButton.h"
 #include "afxwin.h"
 
-
-
 struct DataHolder
 {
-	void* pData;
-	void* pData2;
+	void *pData;
+	void *pData2;
 };
-
 
 /////////////////////////////////////////////////////////////////////////////
 // CWfguiDlg dialog
@@ -35,35 +32,37 @@ class CWfguiDlg : public CDialog
 	// Construction
 public:
 	// void DoFFT();
-	CWfguiDlg(CWnd* pParent = NULL);	// standard constructor
-
+	CWfguiDlg(CWnd *pParent = NULL); // standard constructor
 
 	// Dialog Data
-		//{{AFX_DATA(CWfguiDlg)
-	enum { IDD = IDD_WFGUI_DIALOG };
+	//{{AFX_DATA(CWfguiDlg)
+	enum
+	{
+		IDD = IDD_WFGUI_DIALOG
+	};
 	C3DMeterCtrl m_3DMeterCtrl;
-	CProgressCtrl	m_LevelCtrl;
-	CComboBox	m_filter_combo;
-	CProgressCtrl	m_metercontrol;
-	CButton	m_radio10;
-	CButton	m_radio01;
-	CButton	m_radio05;
-	CString	m_status;
-	CString	m_freq;
-	CString	m_rms;
-	CString	m_filter_type;
-	CString	m_peak;
-	BOOL	m_savefile;
+	CProgressCtrl m_LevelCtrl;
+	CComboBox m_filter_combo;
+	CProgressCtrl m_metercontrol;
+	CButton m_radio10;
+	CButton m_radio01;
+	CButton m_radio05;
+	CString m_status;
+	CString m_freq;
+	CString m_rms;
+	CString m_filter_type;
+	CString m_peak;
+	BOOL m_savefile;
 	CString m_max_10_sec;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CWfguiDlg)
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-	//}}AFX_VIRTUAL
+	virtual void DoDataExchange(CDataExchange *pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 protected:
 	HICON m_hIcon;
 	COScopeCtrl m_OScopeCtrl;
@@ -93,7 +92,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	void PrepareBuffers();
-	void ProcessHeader(WAVEHDR* pHdr);
+	void ProcessHeader(WAVEHDR *pHdr);
 	WAVEFORMATEX m_stWFEX;
 	CString StoreError(MMRESULT mRes, BOOL bDisplay, LPCTSTR lpszFormat, ...);
 	void OpenDevice();
@@ -107,7 +106,7 @@ public:
 	CButton m_3000;
 	CEdit m_freq_display;
 	CEdit m_RMS_box;
-	//CButton
+	// CButton
 	CLedButton m_OK_LED;
 	bool m_log;
 };

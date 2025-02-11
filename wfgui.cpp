@@ -15,11 +15,11 @@ static char THIS_FILE[] = __FILE__;
 // CWfguiApp
 
 BEGIN_MESSAGE_MAP(CWfguiApp, CWinApp)
-	//{{AFX_MSG_MAP(CWfguiApp)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
-		//    DO NOT EDIT what you see in these blocks of generated code!
-	//}}AFX_MSG
-	ON_COMMAND(ID_HELP, CWinApp::OnHelp)
+//{{AFX_MSG_MAP(CWfguiApp)
+// NOTE - the ClassWizard will add and remove mapping macros here.
+//    DO NOT EDIT what you see in these blocks of generated code!
+//}}AFX_MSG
+ON_COMMAND(ID_HELP, CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,6 @@ BOOL CWfguiApp::InitInstance()
 	// If you are not using these features and wish to reduce the size
 	//  of your final executable, you should remove from the following
 	//  the specific initialization routines you do not need.
-
 
 	CWfguiDlg dlg;
 	m_pMainWnd = &dlg;

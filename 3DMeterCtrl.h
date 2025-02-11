@@ -18,71 +18,71 @@
 
 class C3DMeterCtrl : public CStatic
 {
-// Construction
+	// Construction
 public:
 	C3DMeterCtrl();
 
-// Attributes
+	// Attributes
 protected:
-	int m_nBottomCX ;
-	int m_nBottomCY ;
-	int m_nBottomRadius ;
-	int m_nTopRadius ;
-	int m_nValueFontHeight ;
-	int m_nValueBaseline ;
-	int m_nValueCenter ;
+	int m_nBottomCX;
+	int m_nBottomCY;
+	int m_nBottomRadius;
+	int m_nTopRadius;
+	int m_nValueFontHeight;
+	int m_nValueBaseline;
+	int m_nValueCenter;
 
-	double m_dLeftAngleRad ;
-	double m_dRightAngleRad ;
+	double m_dLeftAngleRad;
+	double m_dRightAngleRad;
 
-	CRect m_rectCtrl ;
-	CRect m_rectValue ;
-	CPoint m_pointBoundary[BOUNDARY_POINTS] ;
-	CRgn m_rgnBoundary ;
+	CRect m_rectCtrl;
+	CRect m_rectValue;
+	CPoint m_pointBoundary[BOUNDARY_POINTS];
+	CRgn m_rgnBoundary;
 
-	CFont m_fontValue ;
+	CFont m_fontValue;
 
-	COLORREF m_colorWindow ;
-	COLORREF m_colorHighlight ;
-	COLORREF m_colorShadow ;
-	COLORREF m_colorButton ;
-	COLORREF m_colorText ;
-	
-	CDC m_dcBackground ;
+	COLORREF m_colorWindow;
+	COLORREF m_colorHighlight;
+	COLORREF m_colorShadow;
+	COLORREF m_colorButton;
+	COLORREF m_colorText;
 
-	CBitmap *m_pBitmapOldBackground ;
-	CBitmap m_bitmapBackground ;
+	CDC m_dcBackground;
+
+	CBitmap *m_pBitmapOldBackground;
+	CBitmap m_bitmapBackground;
 
 public:
-	int m_nScaleDecimals ;
-	int m_nValueDecimals ;
+	int m_nScaleDecimals;
+	int m_nValueDecimals;
 
-	double m_dCurrentValue ;
-	double m_dMaxValue ;
-	double m_dMinValue ;
+	double m_dCurrentValue;
+	double m_dMaxValue;
+	double m_dMinValue;
 
-	COLORREF m_colorNeedle ;
-	CString m_strUnits ;
-	
-// Operations
+	COLORREF m_colorNeedle;
+	CString m_strUnits;
+
+	// Operations
 public:
-	void DrawMeterBackground(CDC *pDC, CRect &rect) ;
-	void DrawNeedle(CDC *pDC) ;
-	void DrawValue(CDC *pDC) ;
-	void UpdateNeedle(double dValue) ;
-	void ReconstructControl() ;
-	void SetRange(double dMin, double dMax) ;
-	void SetScaleDecimals(int nDecimals) ;
-	void SetValueDecimals(int nDecimals) ;
-	void SetUnits(CString &strUnits) ;
-	void SetNeedleColor (COLORREF colorNeedle) ;
-	
-// Overrides
+	void DrawMeterBackground(CDC *pDC, CRect &rect);
+	void DrawNeedle(CDC *pDC);
+	void DrawValue(CDC *pDC);
+	void UpdateNeedle(double dValue);
+	void ReconstructControl();
+	void SetRange(double dMin, double dMax);
+	void SetScaleDecimals(int nDecimals);
+	void SetValueDecimals(int nDecimals);
+	void SetUnits(CString &strUnits);
+	void SetNeedleColor(COLORREF colorNeedle);
+
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(C3DMeterCtrl)
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~C3DMeterCtrl();
 

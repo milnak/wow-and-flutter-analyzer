@@ -9,22 +9,35 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // CFrequencyGraph window
-enum FrequencyGraphType{ FG_MICRO_EQ, FG_EQ_CHANNEL, FG_SPECTRUM, FG_OSCILLOSCOPE, FG_PEAK, FG_PEAK2, FG_PIXELGRAM };
+enum FrequencyGraphType
+{
+	FG_MICRO_EQ,
+	FG_EQ_CHANNEL,
+	FG_SPECTRUM,
+	FG_OSCILLOSCOPE,
+	FG_PEAK,
+	FG_PEAK2,
+	FG_PIXELGRAM
+};
 
 class CFrequencyGraph : public CWnd
 {
-// Construction
+	// Construction
 public:
 	CFrequencyGraph();
-	
-	void SetNumberOfSteps(WORD nSteps) { m_wSteps = nSteps; m_nStepFactor = (int)((m_nLength/m_wSteps)+0.5);}
+
+	void SetNumberOfSteps(WORD nSteps)
+	{
+		m_wSteps = nSteps;
+		m_nStepFactor = (int)((m_nLength / m_wSteps) + 0.5);
+	}
 	void SetLowColor(COLORREF clrLow) { m_clrLow = clrLow; }
-	void SetMediumColor(COLORREF clrMedium) { m_clrMedium = clrMedium;	}
+	void SetMediumColor(COLORREF clrMedium) { m_clrMedium = clrMedium; }
 	void SetHighColor(COLORREF clrHigh) { m_clrHigh = clrHigh; }
 	void SetMediumLevel(int nLevel) { m_nMediumLevel = nLevel; }
 	void SetHighLevel(int nLevel) { m_nHighLevel = nLevel; }
-	void SetGrid(BOOL bGridOn=TRUE) { m_bGrid = bGridOn; }
-	
+	void SetGrid(BOOL bGridOn = TRUE) { m_bGrid = bGridOn; }
+
 	WORD GetNumberOfSteps() { return m_wSteps; }
 	COLORREF GetLowColor() { return m_clrLow; }
 	COLORREF GetMediumColor() { return m_clrMedium; }
@@ -34,14 +47,14 @@ public:
 	BOOL GetGrid() { return m_bGrid; }
 	void SetYRange(int nMin, int nMax)
 	{
-		m_nMinValue=nMin;
-		m_nMaxValue=nMax;
+		m_nMinValue = nMin;
+		m_nMaxValue = nMax;
 	}
 	void SetLogScale(BOOL bUseLogScale) { m_bLogScale = bUseLogScale; }
 	FrequencyGraphType GetGraphType() { return m_graphType; }
 	void SetGraphType(FrequencyGraphType gType) { m_graphType = gType; }
 
-	void Update(int nNumber, double* dArray);//Takes Intensity after FFT is performed on Wave Data
+	void Update(int nNumber, double *dArray); // Takes Intensity after FFT is performed on Wave Data
 protected:
 	int m_nLength;
 	double *m_dArray;
@@ -60,18 +73,16 @@ protected:
 	void Point(HDC hDC, int x, int y, COLORREF color);
 	BOOL Line(HDC hDC, int x1, int y1, int x2, int y2);
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
-
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CFrequencyGraph)
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CFrequencyGraph();
 
